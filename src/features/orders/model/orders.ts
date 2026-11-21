@@ -21,6 +21,13 @@ export function expire(g: Game) {
         amount: -5,
         kind: "miss",
       });
+      g.challenge?.log.push({
+        t: g.time,
+        type: "miss",
+        orderId: o.id,
+        guest: o.guest,
+        amount: -5,
+      });
       g.notice = `${o.guest} 离店，损失 ¥5`;
     }
   }

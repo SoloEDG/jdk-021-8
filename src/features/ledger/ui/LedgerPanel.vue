@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Game } from "../../../shared/types";
 import { totals } from "../lib/totals";
+import { recordOf } from "../../challenge/model/store";
 defineProps<{ game: Game }>();
 </script>
 <template>
@@ -22,7 +23,12 @@ defineProps<{ game: Game }>();
       >
     </div>
     <div class="ledger-stat">
-      <small>历史最佳</small><b>¥{{ game.best }}</b>
+      <small>{{ game.challenge ? "赛事最佳（正式）" : "历史最佳" }}</small
+      ><b
+        >¥{{
+          game.challenge ? recordOf(game.challenge.levelId).bestNet : game.best
+        }}</b
+      >
     </div>
     <div class="receipt">
       <div v-for="e in game.entries.slice(-3).reverse()" :key="e.id">

@@ -12,7 +12,8 @@ defineEmits<{ command: [cmd: Command] }>();
         <h2>共享灶台 <span class="small">COOK</span></h2>
       </div>
       <span class="pill"
-        >{{ game.stoves.filter((s) => s.portion).length }} / 3 使用中</span
+        >{{ game.stoves.filter((s) => s.portion).length }} /
+        {{ game.stoves.length }} 使用中</span
       >
     </div>
     <div class="stoves">

@@ -48,5 +48,6 @@ export function createGame(best = 0): Game {
     missed: 0,
     notice: "准备好了吗？开门迎接第一位客人。",
     best,
+    challenge: null,
   };
 }

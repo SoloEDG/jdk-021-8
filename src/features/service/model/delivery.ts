@@ -32,6 +32,16 @@ export function deliver(g: Game) {
     amount,
     kind: "sale",
   });
+  g.challenge?.log.push({
+    t: g.time,
+    type: "serve",
+    orderId: order.id,
+    guest: order.guest,
+    recipe: dish.recipe,
+    quality: q,
+    amount,
+    combo: g.combo,
+  });
   g.dishes = g.dishes.filter((d) => d.id !== dish.id);
   g.selectedDish = null;
   g.selectedOrder = null;

@@ -17,5 +17,6 @@ export function discard(g: Game, id: number) {
     amount: -3,
     kind: "waste",
   });
+  g.challenge?.log.push({ t: g.time, type: "waste", label: "丢弃菜品", amount: -3 });
   g.notice = "已丢弃，浪费成本 ¥3";
 }

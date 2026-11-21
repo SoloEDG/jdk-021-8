@@ -14,7 +14,11 @@ defineEmits<{ command: [cmd: Command] }>();
           今日订单 <span class="count">{{ activeOrders(game).length }}</span>
         </h2>
       </div>
-      <span class="muted">接单后开始备餐 · 每 18 秒迎来新客</span>
+      <span class="muted">{{
+        game.challenge
+          ? "按赛事来客表到店 · 重复开局顺序不变"
+          : "接单后开始备餐 · 每 18 秒迎来新客"
+      }}</span>
     </div>
     <div class="tickets">
       <OrderCard

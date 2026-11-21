@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref } from "vue";
 import { useSession } from "./session";
 import { dispatch } from "./commands";
 import { OrdersPanel } from "../features/orders";
@@ -6,20 +7,81 @@ import { PantryPanel } from "../features/pantry";
 import { KitchenPanel } from "../features/kitchen";
 import { ServicePanel } from "../features/service";
 import { LedgerPanel, ResultOverlay, totals } from "../features/ledger";
-const { game, toggle, restart } = useSession();
+import {
+  ChallengeLobby,
+  LevelEditor,
+  ChallengeResult,
+  saveLevel,
+} from "../features/challenge";
+import type { Level, RunMode } from "../shared/challenge";
+const { game, toggle, pause, restart, startChallenge, exitChallenge } =
+  useSession();
+const view = ref<"kitchen" | "lobby" | "editor">("kitchen");
+const editSource = ref<Level | null>(null);
+const editKeepId = ref(false);
+function go(v: "kitchen" | "lobby") {
+  if (v !== "kitchen") pause();
+  view.value = v;
+}
+function beginRun(level: Level, mode: RunMode) {
+  startChallenge(level, mode);
+  view.value = "kitchen";
+}
+function openEditor(source: Level | null, keepId: boolean) {
+  pause();
+  editSource.value = source;
+  editKeepId.value = keepId;
+  view.value = "editor";
+}
+function saveDraft(draft: Level) {
+  saveLevel(draft);
+  view.value = "lobby";
+}
+function quitRun() {
+  exitChallenge();
+  view.value = "lobby";
+}
 </script>
 <template>
   <div class="app-shell">
     <aside class="rail">
       <a class="brand" href="#" aria-label="午市厨房">午<span>市</span></a>
       <div class="rail-line"></div>
-      <span class="rail-icon active">♨</span
-      ><span class="rail-label">厨房</span>
+      <button
+        class="rail-item"
+        :class="{ active: view === 'kitchen' }"
+        @click="go('kitchen')"
+      >
+        <span class="rail-icon">♨</span><span class="rail-label">厨房</span>
+      </button>
+      <button
+        class="rail-item"
+        :class="{ active: view === 'lobby' || view === 'editor' }"
+        @click="go('lobby')"
+      >
+        <span class="rail-icon">🏆</span><span class="rail-label">赛事</span>
+      </button>
       <div class="rail-bottom">
         LUNCH<br />RUSH<br /><small>EST. 2026</small>
       </div>
     </aside>
-    <main>
+    <main v-if="view === 'lobby'">
+      <ChallengeLobby
+        @run="beginRun"
+        @edit="(l) => openEditor(l, true)"
+        @copy="(l) => openEditor(l, false)"
+        @create="openEditor(null, false)"
+      />
+    </main>
+    <main v-else-if="view === 'editor'">
+      <LevelEditor
+        :source="editSource"
+        :keep-id="editKeepId"
+        @save="saveDraft"
+        @cancel="view = 'lobby'"
+      />
+    </main>
+    <main v-else>
       <header>
         <div>
           <div class="eyebrow">LUNCH RUSH / A LITTLE KITCHEN, A BIG DREAM</div>
@@ -30,9 +92,32 @@ const { game, toggle, restart } = useSession();
           ><span>{{
             game.running ? "正在营业" : game.ended ? "今日打烊" : "准备开门"
           }}</span
-          ><button class="outline" @click="restart">重新开局</button>
+          ><button class="outline" @click="restart">
+            {{ game.challenge ? "重开本关" : "重新开局" }}
+          </button>
         </div>
       </header>
+      <div v-if="game.challenge" class="challenge-banner">
+        <div>
+          <b>{{ game.challenge.levelName }}</b>
+          <span class="pill">v{{ game.challenge.version }}</span>
+          <span
+            class="pill"
+            :class="
+              game.challenge.mode === 'practice' ? 'soft-pill' : 'official-pill'
+            "
+            >{{ game.challenge.mode === "practice" ? "预演" : "正式挑战" }}</span
+          >
+        </div>
+        <span class="muted">
+          目标：净收益≥¥{{ game.challenge.spec.goals.minNet }} · 浪费≤¥{{
+            game.challenge.spec.goals.maxWaste
+          }}
+          · 满意度≥{{ game.challenge.spec.goals.minSatisfaction }}%
+          {{ game.challenge.spec.restockAllowed ? "" : " · 禁止采购" }}
+        </span>
+        <button class="tiny soft" @click="quitRun">放弃并返回大厅</button>
+      </div>
       <div class="hero">
         <div>
           <span class="eyebrow">THE LUNCH SHIFT</span>
@@ -95,10 +180,16 @@ const { game, toggle, restart } = useSession();
       <LedgerPanel :game="game" />
       <footer>
         好食材，好火候，好心情。<span
-          >午市厨房 / LUNCH RUSH · 180 秒的小小餐厅</span
+          >午市厨房 / LUNCH RUSH · {{ game.duration }} 秒的小小餐厅</span
         >
       </footer>
     </main>
-    <ResultOverlay :game="game" @restart="restart" />
+    <ResultOverlay v-if="!game.challenge" :game="game" @restart="restart" />
+    <ChallengeResult
+      v-if="game.challenge"
+      :game="game"
+      @retry="restart"
+      @lobby="quitRun"
+    />
   </div>
 </template>

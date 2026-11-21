@@ -30,6 +30,13 @@ export function lift(g: Game, id: number) {
     cookedAt: g.time,
     stage: "counter",
   });
+  g.challenge?.log.push({
+    t: g.time,
+    type: "lift",
+    recipe: p.recipe,
+    quality: q,
+    elapsed: Math.round((g.time - s.started) * 10) / 10,
+  });
   s.portion = null;
   g.notice = `起锅完成，品质 ${q}，前往装盘`;
 }

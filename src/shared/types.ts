@@ -1,3 +1,5 @@
+import type { ChallengeCtx } from "./challenge";
+
 export type RecipeId = "steak" | "pasta" | "salad";
 export type Ingredient = "beef" | "noodle" | "greens";
 export interface Recipe {
@@ -61,6 +63,7 @@ export interface Game {
   missed: number;
   notice: string;
   best: number;
+  challenge: ChallengeCtx | null;
 }
 export type Command =
   | { type: "accept"; id: number }
